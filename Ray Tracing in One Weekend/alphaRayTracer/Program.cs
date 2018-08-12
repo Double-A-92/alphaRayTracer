@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Numerics;
 
 namespace alphaRayTracer
@@ -40,22 +41,36 @@ namespace alphaRayTracer
 
         static Vector3 TraceRay(Ray ray)
         {
-            if (HitsSphere(new Vector3(30, 100, 500), 50, ray))
-                return Vector3.UnitX; //Red
+            var sphereCenter = new Vector3(0, 0, 500);
+            if (IntersectWithSphere(sphereCenter, 100, ray, out Vector3 sphereIntersection))
+            {
+                var normalVector = Vector3.Normalize(sphereIntersection - sphereCenter);
+                return 0.5f * new Vector3(normalVector.X + 1, -normalVector.Y + 1, -normalVector.Z + 1); ; // Normal shade
+            }
             else
+            {
                 return GetBackgroundColor(ray);
+            }
         }
 
-        static bool HitsSphere(Vector3 center, float radius, Ray ray)
+        static bool IntersectWithSphere(Vector3 center, float radius, Ray ray, out Vector3 intersection)
         {
             Vector3 oc = ray.Position - center;
 
-            float a = Vector3.Dot(ray.Direction, ray.Direction);
-            float b = 2f * Vector3.Dot(ray.Direction, oc);
-            float c = Vector3.Dot(oc, oc) - radius * radius;
+            var a = Vector3.Dot(ray.Direction, ray.Direction);
+            var b = 2f * Vector3.Dot(oc, ray.Direction);
+            var c = Vector3.Dot(oc, oc) - radius * radius;
 
-            float discriminant = b * b - 4 * a * c;
-            return discriminant > 0;
+            var discriminant = b * b - 4 * a * c;
+            if (discriminant > 0)
+            {
+                var t = (-b - Math.Sqrt(discriminant)) / (2.0 * a);
+                intersection = ray.PointAt((float)t);
+                return true;
+            }
+
+            intersection = Vector3.Zero;
+            return false;
         }
 
         static Vector3 GetBackgroundColor(Ray ray)
