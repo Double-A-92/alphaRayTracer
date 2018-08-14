@@ -16,23 +16,17 @@ namespace alphaRayTracer
             int imageWidth = 1920;
             int imageHeight = 1080;
             var image = new DirectBitmap(imageWidth, imageHeight);
-
-            Vector3 origin = Vector3.Zero;
-            Vector3 upperLeftCorner = new Vector3(-imageWidth / 2f, -imageHeight / 2f, imageHeight);
-            Vector3 horizontal = imageWidth * Vector3.UnitX;
-            Vector3 vertical = imageHeight * Vector3.UnitY;
-
+            var camera = new Camera((float)imageWidth / imageHeight);
             var world = generateRandomSpheres();
 
-            for (var x = 0; x < imageWidth; x++)
+            for (var y = 0; y < imageHeight; y++)
             {
-                for (var y = 0; y < imageHeight; y++)
+                for (var x = 0; x < imageWidth; x++)
                 {
-                    // TODO: Understand why this "scaling" exists. Seems unnecessary.
                     float u = (float)x / imageWidth;
                     float v = (float)y / imageHeight;
+                    Ray ray = camera.getRay(u, v);
 
-                    Ray ray = new Ray(origin, upperLeftCorner + u * horizontal + v * vertical - origin);
                     var color = TraceRay(ray, world);
                     image.SetPixel(x, y, color);
                 }
@@ -69,7 +63,7 @@ namespace alphaRayTracer
             int imageHeight = 1080;
 
             var random = new Random();
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 10; i++)
             {
                 var x = random.Next(-imageWidth / 2, imageWidth / 2);
                 var y = random.Next(-imageHeight / 2, imageHeight / 2);
