@@ -13,9 +13,10 @@ namespace alphaRayTracer
 
         static void RenderScene()
         {
-            int imageWidth = 1920;
-            int imageHeight = 1080;
+            int imageWidth = 1280;
+            int imageHeight = 720;
             var image = new DirectBitmap(imageWidth, imageHeight);
+            int samplesPerPixel = 8; // >1 = AntiAliasing (slow)
             var camera = new Camera((float)imageWidth / imageHeight);
             var world = generateRandomSpheres();
 
@@ -23,11 +24,18 @@ namespace alphaRayTracer
             {
                 for (var x = 0; x < imageWidth; x++)
                 {
-                    float u = (float)x / imageWidth;
-                    float v = (float)y / imageHeight;
-                    Ray ray = camera.getRay(u, v);
+                    var random = new Random();
+                    var color = Vector3.Zero;
+                    for (int i = 0; i < samplesPerPixel; i++)
+                    {
+                        float u = (float)(x + random.NextDouble()) / imageWidth;
+                        float v = (float)(y + random.NextDouble()) / imageHeight;
+                        Ray ray = camera.getRay(u, v);
 
-                    var color = TraceRay(ray, world);
+                        color += TraceRay(ray, world);
+                    }
+                    color /= samplesPerPixel;
+
                     image.SetPixel(x, y, color);
                 }
             }
@@ -63,7 +71,7 @@ namespace alphaRayTracer
             int imageHeight = 1080;
 
             var random = new Random();
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 15; i++)
             {
                 var x = random.Next(-imageWidth / 2, imageWidth / 2);
                 var y = random.Next(-imageHeight / 2, imageHeight / 2);
