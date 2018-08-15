@@ -6,7 +6,7 @@ namespace alphaRayTracer.Intersectables
     {
         private readonly List<IntersectableObject> intersectables = new List<IntersectableObject>();
 
-        public override bool Intersect(out Intersection intersection, Ray ray, float tMin = 0, float tMax = float.MaxValue)
+        public override bool Intersect(out Intersection intersection, Ray ray, float tMin = 0.001f, float tMax = float.MaxValue)
         {
             bool anythingHit = false;
             intersection = null;

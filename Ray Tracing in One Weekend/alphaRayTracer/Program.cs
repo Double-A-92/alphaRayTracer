@@ -6,35 +6,38 @@ namespace alphaRayTracer
 {
     class Program
     {
+        private readonly Random random = new Random();
+
         static void Main(string[] args)
         {
-            RenderScene();
+            var rayTracer = new Program();
+            rayTracer.RenderScene();
         }
 
-        static void RenderScene()
+        private void RenderScene()
         {
             int imageWidth = 1280;
             int imageHeight = 720;
             var image = new DirectBitmap(imageWidth, imageHeight);
-            int samplesPerPixel = 8; // >1 = AntiAliasing (slow)
+            int samplesPerPixel = 100;
             var camera = new Camera((float)imageWidth / imageHeight);
-            var world = generateRandomSpheres();
+            var world = GenerateSpheres();
 
             for (var y = 0; y < imageHeight; y++)
             {
                 for (var x = 0; x < imageWidth; x++)
                 {
-                    var random = new Random();
                     var color = Vector3.Zero;
                     for (int i = 0; i < samplesPerPixel; i++)
                     {
                         float u = (float)(x + random.NextDouble()) / imageWidth;
                         float v = (float)(y + random.NextDouble()) / imageHeight;
-                        Ray ray = camera.getRay(u, v);
+                        Ray ray = camera.GetRay(u, v);
 
                         color += TraceRay(ray, world);
                     }
                     color /= samplesPerPixel;
+                    color = CorrectGamma(color);
 
                     image.SetPixel(x, y, color);
                 }
@@ -43,12 +46,15 @@ namespace alphaRayTracer
             image.Bitmap.Save("Image.png");
         }
 
-        static Vector3 TraceRay(Ray ray, IntersectableList world)
+        private Vector3 TraceRay(Ray ray, IntersectableList world)
         {
-            if (world.Intersect(out Intersection sphereIntersection, ray))
+            if (world.Intersect(out Intersection intersection, ray))
             {
-                var normalVector = sphereIntersection.Normal;
-                return 0.5f * new Vector3(normalVector.X + 1, -normalVector.Y + 1, -normalVector.Z + 1); ; // Normal shade
+                var target = intersection.Position + intersection.Normal + GetRandomPointInUnitSphere();
+                return 0.5f * TraceRay(new Ray(intersection.Position, target - intersection.Position), world); // Diffuse
+
+                //var normalVector = intersection.Normal;
+                //return 0.5f * new Vector3(normalVector.X + 1, -normalVector.Y + 1, -normalVector.Z + 1); ; // Normal shade
             }
             else
             {
@@ -56,30 +62,39 @@ namespace alphaRayTracer
             }
         }
 
-        static Vector3 GetBackgroundColor(Ray ray)
+        private Vector3 GetBackgroundColor(Ray ray)
         {
             Vector3 direction = ray.NormalizedDirection;
             float t = 0.5f * (direction.Y + 1f);
             return t * Vector3.One + (1f - t) * new Vector3(0.5f, 0.7f, 1);
         }
 
-        static IntersectableList generateRandomSpheres()
+        private Vector3 CorrectGamma(Vector3 color)
+        {
+            color.X = (float)Math.Sqrt(color.X);
+            color.Y = (float)Math.Sqrt(color.Y);
+            color.Z = (float)Math.Sqrt(color.Z);
+            return color;
+        }
+
+        private Vector3 GetRandomPointInUnitSphere()
+        {
+            Vector3 point;
+
+            do
+            {
+                point = 2 * new Vector3((float)random.NextDouble(), (float)random.NextDouble(), (float)random.NextDouble()) - Vector3.One;
+            } while (point.LengthSquared() >= 1f);
+
+            return point;
+        }
+
+        private IntersectableList GenerateSpheres()
         {
             var list = new IntersectableList();
-
-            int imageWidth = 1920;
-            int imageHeight = 1080;
-
-            var random = new Random();
-            for (int i = 0; i < 15; i++)
-            {
-                var x = random.Next(-imageWidth / 2, imageWidth / 2);
-                var y = random.Next(-imageHeight / 2, imageHeight / 2);
-                var r = random.Next(50, 200);
-                var z = random.Next(imageHeight, 2 * imageHeight);
-                list.Add(new Sphere(new Vector3(x, y, z), r));
-            }
-
+            list.Add(new Sphere(new Vector3(0, 0, 2), 0.5f));
+            list.Add(new Sphere(new Vector3(0.3f, -0.2f, 1.2f), 0.15f));
+            list.Add(new Sphere(new Vector3(0, 100.5f, 2), 100));
             return list;
         }
     }

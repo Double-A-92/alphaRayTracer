@@ -15,7 +15,7 @@ namespace alphaRayTracer
             upperLeftCorner = -0.5f * (viewWidth + viewHeight) + Vector3.UnitZ;
         }
 
-        public Ray getRay(float u, float v)
+        public Ray GetRay(float u, float v)
         {
             return new Ray(origin, upperLeftCorner + u*viewWidth + v*viewHeight - origin);
         }
