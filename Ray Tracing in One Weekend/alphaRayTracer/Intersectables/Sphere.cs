@@ -1,4 +1,5 @@
-﻿using System;
+﻿using alphaRayTracer.Materials;
+using System;
 using System.Numerics;
 
 namespace alphaRayTracer
@@ -7,11 +8,13 @@ namespace alphaRayTracer
     {
         private readonly Vector3 centerPosition;
         private readonly float radius;
+        private readonly Material material;
 
-        public Sphere(Vector3 centerPosition, float radius)
+        public Sphere(Vector3 centerPosition, float radius, Material material)
         {
             this.centerPosition = centerPosition;
             this.radius = radius;
+            this.material = material;
         }
 
         public override bool Intersect(out Intersection intersection, Ray ray, float tMin = 0.001f, float tMax = float.MaxValue)
@@ -47,7 +50,7 @@ namespace alphaRayTracer
         private Intersection PrepareIntersectionData(Ray ray, float t)
         {
             var intersectionPosition = ray.PointAt((float)t);
-            return new Intersection(t, intersectionPosition, (intersectionPosition - centerPosition) / radius);
+            return new Intersection(t, intersectionPosition, (intersectionPosition - centerPosition) / radius, material);
         }
     }
 }

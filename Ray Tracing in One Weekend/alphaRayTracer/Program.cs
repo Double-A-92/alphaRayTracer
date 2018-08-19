@@ -1,4 +1,5 @@
 ﻿using alphaRayTracer.Intersectables;
+using alphaRayTracer.Materials;
 using System;
 using System.Numerics;
 
@@ -16,8 +17,8 @@ namespace alphaRayTracer
 
         private void RenderScene()
         {
-            int imageWidth = 1280;
-            int imageHeight = 720;
+            int imageWidth = 1920;
+            int imageHeight = 1080;
             var image = new DirectBitmap(imageWidth, imageHeight);
             int samplesPerPixel = 100;
             var camera = new Camera((float)imageWidth / imageHeight);
@@ -46,20 +47,19 @@ namespace alphaRayTracer
             image.Bitmap.Save("Image.png");
         }
 
-        private Vector3 TraceRay(Ray ray, IntersectableList world)
+        private Vector3 TraceRay(Ray ray, IntersectableList world, int depth = 0)
         {
             if (world.Intersect(out Intersection intersection, ray))
             {
-                var target = intersection.Position + intersection.Normal + GetRandomPointInUnitSphere();
-                return 0.5f * TraceRay(new Ray(intersection.Position, target - intersection.Position), world); // Diffuse
+                if (depth > 50) return Vector3.Zero;
 
-                //var normalVector = intersection.Normal;
-                //return 0.5f * new Vector3(normalVector.X + 1, -normalVector.Y + 1, -normalVector.Z + 1); ; // Normal shade
+                if (intersection.Material.Scatter(ray, intersection, out Vector3 attenuation, out Ray scatteredRay))
+                {
+                    return attenuation * TraceRay(scatteredRay, world, depth + 1); // Element-wise multiplication
+                }
             }
-            else
-            {
-                return GetBackgroundColor(ray);
-            }
+
+            return GetBackgroundColor(ray);
         }
 
         private Vector3 GetBackgroundColor(Ray ray)
@@ -77,24 +77,13 @@ namespace alphaRayTracer
             return color;
         }
 
-        private Vector3 GetRandomPointInUnitSphere()
-        {
-            Vector3 point;
-
-            do
-            {
-                point = 2 * new Vector3((float)random.NextDouble(), (float)random.NextDouble(), (float)random.NextDouble()) - Vector3.One;
-            } while (point.LengthSquared() >= 1f);
-
-            return point;
-        }
-
         private IntersectableList GenerateSpheres()
         {
             var list = new IntersectableList();
-            list.Add(new Sphere(new Vector3(0, 0, 2), 0.5f));
-            list.Add(new Sphere(new Vector3(0.3f, -0.2f, 1.2f), 0.15f));
-            list.Add(new Sphere(new Vector3(0, 100.5f, 2), 100));
+            list.Add(new Sphere(new Vector3(0, 0, 2), 0.5f, new Metal(new Vector3(0.831f, 0.686f, 0.216f))));
+            list.Add(new Sphere(new Vector3(0.3f, -0.2f, 1.2f), 0.15f, new Metal(new Vector3(0.533f, 0.604f, 0.592f))));
+            list.Add(new Sphere(new Vector3(-1.1f, 0, 2), 0.5f, new Lambertian(new Vector3(1f, 0.263f, 0.643f))));
+            list.Add(new Sphere(new Vector3(0, 100.5f, 2), 100, new Lambertian(new Vector3(0.086f, 0.357f, 0.192f))));
             return list;
         }
     }
