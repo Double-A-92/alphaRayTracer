@@ -20,7 +20,7 @@ namespace alphaRayTracer
             int imageWidth = 1920;
             int imageHeight = 1080;
             var image = new DirectBitmap(imageWidth, imageHeight);
-            int samplesPerPixel = 100;
+            int samplesPerPixel = 5;
             var camera = new Camera((float)imageWidth / imageHeight);
             var world = GenerateSpheres();
 
@@ -51,12 +51,12 @@ namespace alphaRayTracer
         {
             if (world.Intersect(out Intersection intersection, ray))
             {
-                if (depth > 50) return Vector3.Zero;
-
-                if (intersection.Material.Scatter(ray, intersection, out Vector3 attenuation, out Ray scatteredRay))
+                if (depth < 50 && intersection.Material.Scatter(ray, intersection, out Vector3 attenuation, out Ray scatteredRay))
                 {
                     return attenuation * TraceRay(scatteredRay, world, depth + 1); // Element-wise multiplication
                 }
+
+                return Vector3.Zero;
             }
 
             return GetBackgroundColor(ray);
@@ -80,8 +80,8 @@ namespace alphaRayTracer
         private IntersectableList GenerateSpheres()
         {
             var list = new IntersectableList();
-            list.Add(new Sphere(new Vector3(0, 0, 2), 0.5f, new Metal(new Vector3(0.831f, 0.686f, 0.216f))));
-            list.Add(new Sphere(new Vector3(0.3f, -0.2f, 1.2f), 0.15f, new Metal(new Vector3(0.533f, 0.604f, 0.592f))));
+            list.Add(new Sphere(new Vector3(0, 0, 2), 0.5f, new Metal(new Vector3(0.831f, 0.686f, 0.216f), 0.991f)));
+            list.Add(new Sphere(new Vector3(0.3f, -0.2f, 1.2f), 0.2f, new Metal(new Vector3(0.533f, 0.604f, 0.592f), 0.1f)));
             list.Add(new Sphere(new Vector3(-1.1f, 0, 2), 0.5f, new Lambertian(new Vector3(1f, 0.263f, 0.643f))));
             list.Add(new Sphere(new Vector3(0, 100.5f, 2), 100, new Lambertian(new Vector3(0.086f, 0.357f, 0.192f))));
             return list;
